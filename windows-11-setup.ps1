@@ -46,6 +46,8 @@ Start-Transcript -Path "C:\ProgramData\AvenaScriptSetup\Debloat.log"
 
 #Unnecessary Windows 10/11 AppX Apps
 $Bloatware = @(
+    "Microsoft.Advertising.Xaml"
+    "Microsoft.Advertising.Xaml"
     "Microsoft.BingNews"
     "Microsoft.GetHelp"
     "Microsoft.Getstarted"
@@ -66,6 +68,8 @@ $Bloatware = @(
     "Microsoft.SkypeApp"
     "Microsoft.StorePurchaseApp"
     "Microsoft.Office.Todo.List"
+    "Microsoft.PowerAutomateDesktop"
+    "Microsoft.Todos"
     "Microsoft.Whiteboard"
     "Microsoft.WindowsAlarms"
     "microsoft.windowscommunicationsapps"
@@ -73,6 +77,8 @@ $Bloatware = @(
     "Microsoft.WindowsMaps"
     "MicrosoftTeams"
     "Microsoft.YourPhone"
+    #"Microsoft.ZuneMusic" # Media Player
+    "Microsoft.ZuneVideo" # Movies & TV
     "SpotifyAB.SpotifyMusic"
     "Disney.37853FC22B2CE"
     "*EclipseManager*"
@@ -94,8 +100,6 @@ $Bloatware = @(
     "*Office*"
     "*Disney*"
     "MicrosoftCorporationII.MicrosoftFamily"
-    "*Microsoft.Advertising.Xaml_10.1712.5.0_x64__8wekyb3d8bbwe*"
-    "*Microsoft.Advertising.Xaml_10.1712.5.0_x86__8wekyb3d8bbwe*"
 )
 
 foreach ($Bloat in $Bloatware) {
