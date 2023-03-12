@@ -6,8 +6,7 @@
 #                                                                                                          #
 ############################################################################################################
 
-##Elevate if needed
-
+# Elevate if needed
 If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
     Write-Host "You didn't run this script as an Administrator. This script will self elevate to run as an Administrator and continue."
     Start-Sleep 1
@@ -22,9 +21,9 @@ If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 }
 
 #no errors throughout
-$ErrorActionPreference = 'silentlycontinue'
+$ErrorActionPreference = 'Continue'
 
-#Create log folder
+# Create log folder
 $DebloatFolder = "C:\ProgramData\AvenaScriptSetup"
 If (Test-Path $DebloatFolder) {
     Write-Output "$DebloatFolder exists. Skipping."
@@ -44,7 +43,7 @@ Start-Transcript -Path "C:\ProgramData\AvenaScriptSetup\Debloat.log"
 #                                                                                                          #
 ############################################################################################################
 
-#Unnecessary Windows 10/11 AppX Apps
+# Unnecessary Windows 10/11 AppX Apps
 $Bloatware = @(
     "Microsoft.Advertising.Xaml"
     "Microsoft.Advertising.Xaml"
@@ -109,15 +108,14 @@ foreach ($Bloat in $Bloatware) {
 }
 
 
-############################################################################################################
-#                                        Remove Registry Keys                                              #
-#                                                                                                          #
-############################################################################################################
+#--------------------------------------------------------------
+#
+# Remove left over registry keys and other unnecessary features
+#
+#--------------------------------------------------------------
     
-#These are the registry keys that it will delete.
-        
+# These are the registry keys that it will delete.
 $Keys = @(
-        
     #Remove Background Tasks
     "HKCR:\Extensions\ContractId\Windows.BackgroundTasks\PackageId\Microsoft.MicrosoftOfficeHub_17.7909.7600.0_x64__8wekyb3d8bbwe"
         
@@ -125,77 +123,20 @@ $Keys = @(
     "HKCR:\Extensions\ContractId\Windows.PreInstalledConfigTask\PackageId\Microsoft.MicrosoftOfficeHub_17.7909.7600.0_x64__8wekyb3d8bbwe"
 )
     
-#This writes the output of each key it is removing and also removes the keys listed above.
+# This writes the output of each key it is removing and also removes the keys listed above.
 ForEach ($Key in $Keys) {
     Write-Host "Removing $Key from registry"
     Remove-Item $Key -Recurse
 }
 
-
-#Disables Windows Feedback Experience
-Write-Host "Disabling Windows Feedback Experience program"
-$Advertising = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
-If (!(Test-Path $Advertising)) {
-    New-Item $Advertising
-}
-If (Test-Path $Advertising) {
-    Set-ItemProperty $Advertising Enabled -Value 0 
-}
-        
-#Stops Cortana from being used as part of your Windows Search Function
-Write-Host "Stopping Cortana from being used as part of your Windows Search Function"
-$Search = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
-If (!(Test-Path $Search)) {
-    New-Item $Search
-}
-If (Test-Path $Search) {
-    Set-ItemProperty $Search AllowCortana -Value 0 
-}
-
-#Disables Web Search in Start Menu
-Write-Host "Disabling Bing Search in Start Menu"
-$WebSearch = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
-Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Search" BingSearchEnabled -Value 0 
-If (!(Test-Path $WebSearch)) {
-    New-Item $WebSearch
-}
-Set-ItemProperty $WebSearch DisableWebSearch -Value 1 
-        
-#Stops the Windows Feedback Experience from sending anonymous data
-Write-Host "Stopping the Windows Feedback Experience program"
-$Period = "HKCU:\Software\Microsoft\Siuf\Rules"
-If (!(Test-Path $Period)) { 
-    New-Item $Period
-}
-Set-ItemProperty $Period PeriodInNanoSeconds -Value 0 
-
-#Prevents bloatware applications from returning and removes Start Menu suggestions               
-Write-Host "Adding Registry key to prevent bloatware apps from returning"
-$registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent"
-$registryOEM = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
-If (!(Test-Path $registryPath)) { 
-    New-Item $registryPath
-}
-Set-ItemProperty $registryPath DisableWindowsConsumerFeatures -Value 1 
-
-If (!(Test-Path $registryOEM)) {
-    New-Item $registryOEM
-}
-Set-ItemProperty $registryOEM  ContentDeliveryAllowed -Value 0 
-Set-ItemProperty $registryOEM  OemPreInstalledAppsEnabled -Value 0 
-Set-ItemProperty $registryOEM  PreInstalledAppsEnabled -Value 0 
-Set-ItemProperty $registryOEM  PreInstalledAppsEverEnabled -Value 0 
-Set-ItemProperty $registryOEM  SilentInstalledAppsEnabled -Value 0 
-Set-ItemProperty $registryOEM  SystemPaneSuggestionsEnabled -Value 0          
-
-#Preping mixed Reality Portal for removal    
+# Prepare Mixed Reality Portal for removal    
 Write-Host "Setting Mixed Reality Portal value to 0 so that you can uninstall it in Settings"
 $Holo = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic"    
 If (Test-Path $Holo) {
     Set-ItemProperty $Holo  FirstRunSucceeded -Value 0 
 }
 
-#Disables Wi-fi Sense
+# Disable Wi-fi Sense
 Write-Host "Disabling Wi-Fi Sense"
 $WifiSense1 = "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting"
 $WifiSense2 = "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowAutoConnectToWiFiSenseHotspots"
@@ -210,15 +151,85 @@ If (!(Test-Path $WifiSense2)) {
 Set-ItemProperty $WifiSense2  Value -Value 0 
 Set-ItemProperty $WifiSense3  AutoConnectAllowedOEM -Value 0 
     
-#Disables live tiles
+# Disable live tiles
 Write-Host "Disabling live tiles"
 $Live = "HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications"    
 If (!(Test-Path $Live)) {      
     New-Item $Live
 }
-Set-ItemProperty $Live  NoTileApplicationNotification -Value 1 
-    
-#Turns off Data Collection via the AllowTelemtry key by changing it to 0
+Set-ItemProperty $Live  NoTileApplicationNotification -Value 1
+
+# Disables People icon on Taskbar
+Write-Host "Disabling People icon on Taskbar"
+$People = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People'
+If (Test-Path $People) {
+    Set-ItemProperty $People -Name PeopleBand -Value 0
+}
+
+
+#--------------------------------------------------------------------------
+#
+# Remove data collection, telemetry, advertising, Cortana and Bing features
+#
+#--------------------------------------------------------------------------
+
+# Disable Windows Feedback Experience
+Write-Host "Disabling Windows Feedback Experience program"
+$Advertising = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
+If (!(Test-Path $Advertising)) {
+    New-Item $Advertising
+}
+If (Test-Path $Advertising) {
+    Set-ItemProperty $Advertising Enabled -Value 0 
+}
+        
+# Stop Cortana from being used as part of your Windows Search Function
+Write-Host "Stopping Cortana from being used as part of your Windows Search Function"
+$Search = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
+If (!(Test-Path $Search)) {
+    New-Item $Search
+}
+If (Test-Path $Search) {
+    Set-ItemProperty $Search AllowCortana -Value 0 
+}
+
+# Disable Web Search in Start Menu
+Write-Host "Disabling Bing Search in Start Menu"
+$WebSearch = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
+Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Search" BingSearchEnabled -Value 0 
+If (!(Test-Path $WebSearch)) {
+    New-Item $WebSearch
+}
+Set-ItemProperty $WebSearch DisableWebSearch -Value 1 
+        
+# Stop the Windows Feedback Experience from sending anonymous data
+Write-Host "Stopping the Windows Feedback Experience program"
+$Period = "HKCU:\Software\Microsoft\Siuf\Rules"
+If (!(Test-Path $Period)) { 
+    New-Item $Period
+}
+Set-ItemProperty $Period PeriodInNanoSeconds -Value 0 
+
+# Prevent bloatware applications from returning and removes Start Menu suggestions               
+Write-Host "Adding Registry key to prevent bloatware apps from returning"
+$registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent"
+$registryOEM = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+If (!(Test-Path $registryPath)) { 
+    New-Item $registryPath
+}
+Set-ItemProperty $registryPath DisableWindowsConsumerFeatures -Value 1 
+
+If (!(Test-Path $registryOEM)) {
+    New-Item $registryOEM
+}
+Set-ItemProperty $registryOEM ContentDeliveryAllowed -Value 0 
+Set-ItemProperty $registryOEM OemPreInstalledAppsEnabled -Value 0 
+Set-ItemProperty $registryOEM PreInstalledAppsEnabled -Value 0 
+Set-ItemProperty $registryOEM PreInstalledAppsEverEnabled -Value 0 
+Set-ItemProperty $registryOEM SilentInstalledAppsEnabled -Value 0 
+Set-ItemProperty $registryOEM SystemPaneSuggestionsEnabled -Value 0          
+
+# Turn off Data Collection via the AllowTelemtry key by changing it to 0
 Write-Host "Turning off Data Collection"
 $DataCollection1 = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection"
 $DataCollection2 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
@@ -233,7 +244,7 @@ If (Test-Path $DataCollection3) {
    Set-ItemProperty $DataCollection3  AllowTelemetry -Value 0 
 }
 
-#Disabling Location Tracking
+# Disable Location Tracking
 Write-Host "Disabling Location Tracking"
 $SensorState = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Sensor\Overrides\{BFA794E4-F964-4FDB-90F6-51056BFE4B44}"
 $LocationConfig = "HKLM:\SYSTEM\CurrentControlSet\Services\lfsvc\Service\Configuration"
@@ -245,13 +256,8 @@ If (!(Test-Path $LocationConfig)) {
    New-Item $LocationConfig
 }
 Set-ItemProperty $LocationConfig Status -Value 0
-    
-#Disables People icon on Taskbar
-Write-Host "Disabling People icon on Taskbar"
-$People = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People'
-If (Test-Path $People) {
-    Set-ItemProperty $People -Name PeopleBand -Value 0
-}
+
+# Disable Cortana
 Write-Host "Disabling Cortana"
 $Cortana1 = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
 $Cortana2 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"
@@ -270,17 +276,10 @@ If (!(Test-Path $Cortana3)) {
 }
 Set-ItemProperty $Cortana3 HarvestContacts -Value 0
 
-
-#Removes 3D Objects from the 'My Computer' submenu in explorer
-# Write-Host "Removing 3D Objects from explorer 'My Computer' submenu"
-# $Objects32 = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}"
-# $Objects64 = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}"
-# If (Test-Path $Objects32) {
-#     Remove-Item $Objects32 -Recurse 
-# }
-# If (Test-Path $Objects64) {
-#     Remove-Item $Objects64 -Recurse 
-# }
+# Disable the Diagnostics Tracking Service
+Write-Host "Stopping and disabling Diagnostics Tracking Service"
+Stop-Service "DiagTrack"
+Set-Service "DiagTrack" -StartupType Disabled
 
 
 ############################################################################################################
@@ -313,36 +312,24 @@ if ($null -ne $task4) {
 }
 
 
-
-############################################################################################################
-#                                             Disable Services                                             #
-#                                                                                                          #
-############################################################################################################
-
-Write-Host "Stopping and disabling Diagnostics Tracking Service"
-# Disabling the Diagnostics Tracking Service
-Stop-Service "DiagTrack"
-Set-Service "DiagTrack" -StartupType Disabled
-
-
 ############################################################################################################
 #                                        Windows 11 Specific                                               #
 #                                                                                                          #
 ############################################################################################################
 
-#Remove Cortana
+# Remove Cortana
 Get-AppxPackage -allusers Microsoft.549981C3F5F10 | Remove-AppxPackage
 Write-Host "Removed Cortana"
 
-#Remove GetStarted
+# Remove GetStarted
 Get-AppxPackage -allusers *getstarted* | Remove-AppxPackage
 Write-Host "Removed Get Started"
 
-#Remove Parental Controls
+# Remove Parental Controls
 Get-AppxPackage -allusers Microsoft.Windows.ParentalControls | Remove-AppxPackage 
 Write-Host "Removed Parental Controls"
 
-#Remove Teams Chat
+# Remove Teams Chat
 $MSTeams = "MicrosoftTeams"
 $WinPackage = Get-AppxPackage -allusers | Where-Object {$_.Name -eq $MSTeams}
 $ProvisionedPackage = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $WinPackage }
