@@ -1,10 +1,12 @@
-# Based on: https://github.com/andrew-s-taylor/public/blob/main/De-Bloat/RemoveBloat.ps1
-# Removes bloatware and diagnostics tools from Windows 11 PCs intended for personal use
-
-############################################################################################################
-#                                         Initial Setup                                                    #
-#                                                                                                          #
-############################################################################################################
+#--------------------------------------------------------------------------------------------------
+#
+# Initial setup
+#
+# This script removes bloatware and diagnostics tools from Windows 11 PCs intended for personal use
+#
+# Author: Mike Avena
+#
+#--------------------------------------------------------------------------------------------------
 
 # Elevate if needed
 If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
@@ -24,7 +26,7 @@ If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 $ErrorActionPreference = 'Continue'
 
 # Create log folder
-$DebloatFolder = "C:\ProgramData\AvenaScriptSetup"
+$DebloatFolder = "C:\ProgramData\Win11SetupScript"
 If (Test-Path $DebloatFolder) {
     Write-Output "$DebloatFolder exists. Skipping."
 }
@@ -35,15 +37,17 @@ Else {
     Write-Output "The folder $DebloatFolder was successfully created."
 }
 
-Start-Transcript -Path "C:\ProgramData\AvenaScriptSetup\Debloat.log"
+Start-Transcript -Path "C:\ProgramData\Win11SetupScript\Debloat.log"
+
+Write-Host "This log file and directory have been created by your Windows 11 Setup PowerShell script. They are safe to delete."
 
 
-############################################################################################################
-#                                        Remove bloatware packages                                         #
-#                                                                                                          #
-############################################################################################################
+#------------------------------------------------------------
+#
+# Remove bloatware packages that come bundled with Windows 11
+#
+#------------------------------------------------------------
 
-# Unnecessary Windows 10/11 AppX Apps
 $Bloatware = @(
     "Microsoft.Advertising.Xaml"
     "Microsoft.Advertising.Xaml"
@@ -76,7 +80,7 @@ $Bloatware = @(
     "Microsoft.WindowsMaps"
     "MicrosoftTeams"
     "Microsoft.YourPhone"
-    #"Microsoft.ZuneMusic" # Media Player
+    "Microsoft.ZuneMusic" # Media Player
     "Microsoft.ZuneVideo" # Movies & TV
     "SpotifyAB.SpotifyMusic"
     "Disney.37853FC22B2CE"
@@ -104,7 +108,7 @@ $Bloatware = @(
 foreach ($Bloat in $Bloatware) {
     Get-AppxPackage -allusers -Name $Bloat| Remove-AppxPackage -AllUsers
     Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
-    Write-Host "Trying to remove $Bloat."
+    Write-Host "Trying to remove $Bloat"
 }
 
 
@@ -281,33 +285,27 @@ Write-Host "Stopping and disabling Diagnostics Tracking Service"
 Stop-Service "DiagTrack"
 Set-Service "DiagTrack" -StartupType Disabled
 
-
-############################################################################################################
-#                                        Remove Scheduled Tasks                                            #
-#                                                                                                          #
-############################################################################################################
-
 # Remove task that collects and sends usage data to Microsoft
-$task1 = Get-ScheduledTask -TaskName Consolidator -ErrorAction SilentlyContinue
-if ($null -ne $task1) {
+$TaskConsolidator = Get-ScheduledTask -TaskName Consolidator -ErrorAction SilentlyContinue
+if ($null -ne $TaskConsolidator) {
     Get-ScheduledTask  Consolidator | Disable-ScheduledTask -ErrorAction SilentlyContinue
 }
 
 # Remove Customer Experience Improvement Program task that collects and sends USB info
-$task2 = Get-ScheduledTask -TaskName UsbCeip -ErrorAction SilentlyContinue
-if ($null -ne $task2) {
+$TaskUsbCeip = Get-ScheduledTask -TaskName UsbCeip -ErrorAction SilentlyContinue
+if ($null -ne $TaskUsbCeip) {
     Get-ScheduledTask  UsbCeip | Disable-ScheduledTask -ErrorAction SilentlyContinue
 }
 
 # Remove DmClient task that sends usage data to Microsoft
-$task3 = Get-ScheduledTask -TaskName DmClient -ErrorAction SilentlyContinue
-if ($null -ne $task3) {
+$TaskDmClient = Get-ScheduledTask -TaskName DmClient -ErrorAction SilentlyContinue
+if ($null -ne $TaskDmClient) {
     Get-ScheduledTask  DmClient | Disable-ScheduledTask -ErrorAction SilentlyContinue
 }
 
 # Remove DmClient task that sends usage data to Microsoft
-$task4 = Get-ScheduledTask -TaskName DmClientOnScenarioDownload -ErrorAction SilentlyContinue
-if ($null -ne $task4) {
+$TaskDmClientOnScenarioDownload = Get-ScheduledTask -TaskName DmClientOnScenarioDownload -ErrorAction SilentlyContinue
+if ($null -ne $TaskDmClientOnScenarioDownload) {
     Get-ScheduledTask  DmClientOnScenarioDownload | Disable-ScheduledTask -ErrorAction SilentlyContinue
 }
 
