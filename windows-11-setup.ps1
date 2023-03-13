@@ -22,9 +22,6 @@ If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
     Exit
 }
 
-#no errors throughout
-$ErrorActionPreference = 'Continue'
-
 # Create log folder
 $DebloatFolder = "C:\ProgramData\Win11SetupScript"
 If (Test-Path $DebloatFolder) {
@@ -111,6 +108,14 @@ foreach ($Bloat in $Bloatware) {
     Write-Host "Trying to remove $Bloat"
 }
 
+# Remove GetStarted
+Get-AppxPackage -allusers *getstarted* | Remove-AppxPackage
+Write-Host "Removed Get Started"
+
+# Remove Parental Controls
+Get-AppxPackage -allusers Microsoft.Windows.ParentalControls | Remove-AppxPackage 
+Write-Host "Removed Parental Controls"
+
 
 #--------------------------------------------------------------
 #
@@ -171,9 +176,52 @@ If (Test-Path $People) {
 }
 
 
+#--------------------------------------------------
+#
+# Uninstall and remove Cortana and related features
+#
+#--------------------------------------------------
+
+# Stop Cortana from being used as part of your Windows Search Function
+Write-Host "Stopping Cortana from being used as part of your Windows Search Function"
+$Search = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
+If (!(Test-Path $Search)) {
+    New-Item $Search
+}
+If (Test-Path $Search) {
+    Set-ItemProperty $Search AllowCortana -Value 0
+}
+
+# Disable Cortana
+Write-Host "Disabling Cortana"
+$Cortana1 = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
+$Cortana2 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"
+$Cortana3 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization\TrainedDataStore"
+
+If (!(Test-Path $Cortana1)) {
+    New-Item $Cortana1
+}
+Set-ItemProperty $Cortana1 AcceptedPrivacyPolicy -Value 0
+
+If (!(Test-Path $Cortana2)) {
+    New-Item $Cortana2
+}
+Set-ItemProperty $Cortana2 RestrictImplicitTextCollection -Value 1
+Set-ItemProperty $Cortana2 RestrictImplicitInkCollection -Value 1
+
+If (!(Test-Path $Cortana3)) {
+    New-Item $Cortana3
+}
+Set-ItemProperty $Cortana3 HarvestContacts -Value 0
+
+# Remove Cortana
+Get-AppxPackage -allusers Microsoft.549981C3F5F10 | Remove-AppxPackage
+Write-Host "Removed Cortana"
+
+
 #--------------------------------------------------------------------------
 #
-# Remove data collection, telemetry, advertising, Cortana and Bing features
+# Remove data collection, telemetry, advertising, and Bing features
 #
 #--------------------------------------------------------------------------
 
@@ -185,16 +233,6 @@ If (!(Test-Path $Advertising)) {
 }
 If (Test-Path $Advertising) {
     Set-ItemProperty $Advertising Enabled -Value 0 
-}
-        
-# Stop Cortana from being used as part of your Windows Search Function
-Write-Host "Stopping Cortana from being used as part of your Windows Search Function"
-$Search = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
-If (!(Test-Path $Search)) {
-    New-Item $Search
-}
-If (Test-Path $Search) {
-    Set-ItemProperty $Search AllowCortana -Value 0 
 }
 
 # Disable Web Search in Start Menu
@@ -261,71 +299,41 @@ If (!(Test-Path $LocationConfig)) {
 }
 Set-ItemProperty $LocationConfig Status -Value 0
 
-# Disable Cortana
-Write-Host "Disabling Cortana"
-$Cortana1 = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
-$Cortana2 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"
-$Cortana3 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization\TrainedDataStore"
-If (!(Test-Path $Cortana1)) {
-    New-Item $Cortana1
-}
-Set-ItemProperty $Cortana1 AcceptedPrivacyPolicy -Value 0 
-If (!(Test-Path $Cortana2)) {
-    New-Item $Cortana2
-}
-Set-ItemProperty $Cortana2 RestrictImplicitTextCollection -Value 1 
-Set-ItemProperty $Cortana2 RestrictImplicitInkCollection -Value 1 
-If (!(Test-Path $Cortana3)) {
-    New-Item $Cortana3
-}
-Set-ItemProperty $Cortana3 HarvestContacts -Value 0
-
 # Disable the Diagnostics Tracking Service
 Write-Host "Stopping and disabling Diagnostics Tracking Service"
 Stop-Service "DiagTrack"
 Set-Service "DiagTrack" -StartupType Disabled
 
 # Remove task that collects and sends usage data to Microsoft
-$TaskConsolidator = Get-ScheduledTask -TaskName Consolidator -ErrorAction SilentlyContinue
+$TaskConsolidator = Get-ScheduledTask -TaskName Consolidator
 if ($null -ne $TaskConsolidator) {
-    Get-ScheduledTask  Consolidator | Disable-ScheduledTask -ErrorAction SilentlyContinue
+    Get-ScheduledTask  Consolidator | Disable-ScheduledTask
 }
 
 # Remove Customer Experience Improvement Program task that collects and sends USB info
-$TaskUsbCeip = Get-ScheduledTask -TaskName UsbCeip -ErrorAction SilentlyContinue
+$TaskUsbCeip = Get-ScheduledTask -TaskName UsbCeip
 if ($null -ne $TaskUsbCeip) {
-    Get-ScheduledTask  UsbCeip | Disable-ScheduledTask -ErrorAction SilentlyContinue
+    Get-ScheduledTask  UsbCeip | Disable-ScheduledTask
 }
 
 # Remove DmClient task that sends usage data to Microsoft
-$TaskDmClient = Get-ScheduledTask -TaskName DmClient -ErrorAction SilentlyContinue
+$TaskDmClient = Get-ScheduledTask -TaskName DmClient
 if ($null -ne $TaskDmClient) {
-    Get-ScheduledTask  DmClient | Disable-ScheduledTask -ErrorAction SilentlyContinue
+    Get-ScheduledTask  DmClient | Disable-ScheduledTask
 }
 
 # Remove DmClient task that sends usage data to Microsoft
-$TaskDmClientOnScenarioDownload = Get-ScheduledTask -TaskName DmClientOnScenarioDownload -ErrorAction SilentlyContinue
+$TaskDmClientOnScenarioDownload = Get-ScheduledTask -TaskName DmClientOnScenarioDownload
 if ($null -ne $TaskDmClientOnScenarioDownload) {
-    Get-ScheduledTask  DmClientOnScenarioDownload | Disable-ScheduledTask -ErrorAction SilentlyContinue
+    Get-ScheduledTask  DmClientOnScenarioDownload | Disable-ScheduledTask
 }
 
 
-############################################################################################################
-#                                        Windows 11 Specific                                               #
-#                                                                                                          #
-############################################################################################################
-
-# Remove Cortana
-Get-AppxPackage -allusers Microsoft.549981C3F5F10 | Remove-AppxPackage
-Write-Host "Removed Cortana"
-
-# Remove GetStarted
-Get-AppxPackage -allusers *getstarted* | Remove-AppxPackage
-Write-Host "Removed Get Started"
-
-# Remove Parental Controls
-Get-AppxPackage -allusers Microsoft.Windows.ParentalControls | Remove-AppxPackage 
-Write-Host "Removed Parental Controls"
+#-----------------------------------------------------------
+#
+# Remove Microsoft Teams (Personal), bundled with Windows 11
+#
+#-----------------------------------------------------------
 
 # Remove Teams Chat
 $MSTeams = "MicrosoftTeams"
@@ -355,6 +363,7 @@ If (!(Test-Path $registryPath)) {
 }
 Set-ItemProperty $registryPath "ChatIcon" -Value 2
 Write-Host "Removed Teams Chat"
+
 
 Write-Host "Completed"
 
