@@ -1,12 +1,17 @@
-#--------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------
 #
 # Initial setup
 #
-# This script removes bloatware and diagnostics tools from Windows 11 PCs intended for personal use
+# Declutters a fresh Windows 11 installation by removing bloatware and advertising features. Recommended 
+# for personal use only, as this script will disable telemetry features that are required for Intune 
+# mobile device management to work.
+#
+# This is a derivative work of https://github.com/andrew-s-taylor/public/blob/main/De-Bloat/RemoveBloat.ps1
+# License: GNU GENERAL PUBLIC LICENSE, Version 3
 #
 # Author: Mike Avena
 #
-#--------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------
 
 # Elevate if needed
 If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {

@@ -1,5 +1,4 @@
 # Author: Mike Avena
-# License: MIT
 # Purpose: Compares the contents of two directories by calculating the MD5 hash of each file within. Used to verify copy/backup integrity.
 # Output: Table of files which have mismatching MD5 hashes between the source and target directories.
 
