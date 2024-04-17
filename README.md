@@ -1,6 +1,6 @@
 ## PowerShell Scripts
 
-A collection of useful PowerShell scripts for managing Windows 10/11 computers.
+A collection of useful PowerShell scripts for managing Windows 11 computers.
 
 # License
 
